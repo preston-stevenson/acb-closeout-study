@@ -1,0 +1,291 @@
+<title>Closeout Contrast</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: film-room split screen. Thesis strip, two synced half-court panels (flew out | under control), shared transport, then the numbers and the rule. */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#18202a; --muted:#5d6876; --rule:#d5dbe2;
+  --court:#e2c99e; --court-paint:#d4b585; --court-line:rgba(40,28,14,.72);
+  --off:#f0b300; --off-ink:#1d1600; --def:#3f4fc4; --def-ink:#ffffff; --ghost:rgba(24,32,42,.28);
+  --ball:#e35d12; --beat:#c8264f; --hold:#1f8a5b; --focus:#3f4fc4;
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1318; --panel:#171c23; --ink:#e7ebf0; --muted:#97a2b0; --rule:#2a313b;
+  --court:#2b2620; --court-paint:#352d24; --court-line:rgba(236,224,204,.62);
+  --off:#f5bf1a; --off-ink:#1d1600; --def:#7d8cf0; --def-ink:#0d1030; --ghost:rgba(231,235,240,.28);
+  --ball:#ff7a2e; --beat:#ff5c82; --hold:#3fc48a; --focus:#9aa6ff; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1318; --panel:#171c23; --ink:#e7ebf0; --muted:#97a2b0; --rule:#2a313b;
+  --court:#2b2620; --court-paint:#352d24; --court-line:rgba(236,224,204,.62);
+  --off:#f5bf1a; --off-ink:#1d1600; --def:#7d8cf0; --def-ink:#0d1030; --ghost:rgba(231,235,240,.28);
+  --ball:#ff7a2e; --beat:#ff5c82; --hold:#3fc48a; --focus:#9aa6ff; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1240px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,4.4vw,44px);line-height:1;margin:4px 0 0;text-wrap:balance}
+.lede{margin:8px 0 0;color:var(--muted);max-width:72ch}
+.split{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.split{grid-template-columns:minmax(0,1fr)}}
+.pane{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px;display:grid;gap:10px;min-width:0}
+.pane-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 12px}
+.tag{font-family:var(--f-display);font-weight:700;font-size:24px;letter-spacing:.01em;line-height:1}
+.tag small{display:block;font-family:var(--f-body);font-weight:400;font-size:13px;color:var(--muted);letter-spacing:0;margin-top:3px}
+.tag.flew{color:var(--beat)} .tag.ctrl{color:var(--hold)}
+.picks{display:flex;flex-wrap:wrap;gap:4px;margin-left:auto}
+button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:4px;padding:5px 10px;cursor:pointer;font-size:13px}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.meta{font-size:13px;color:var(--muted)}
+.meta b{color:var(--ink);font-weight:600}
+.courtbox{position:relative;width:100%;aspect-ratio:55.2/42.9;max-width:100%}
+canvas{display:block;width:100%;height:100%}
+.read{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.read>div{background:var(--panel);padding:6px 10px;min-width:0}
+.read .lab{font-family:var(--f-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block}
+.read .val{font-family:var(--f-display);font-weight:600;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
+.pill{display:inline-block;font-family:var(--f-display);font-weight:600;font-size:19px;line-height:1.2;padding:1px 8px;border-radius:999px;border:1.5px solid currentColor;margin-top:2px;white-space:nowrap}
+.pill.beat{color:var(--beat)} .pill.hold{color:var(--hold)} .pill.neutral{color:var(--muted)}
+.mini{position:relative;height:110px}
+.transport{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.trow{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+#play{min-width:84px;font-weight:600;font-size:15px}
+.speeds{display:flex;gap:4px}
+.speeds button{font-family:var(--f-mono)}
+.time{margin-left:auto;font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;margin:0;accent-color:var(--ink)}
+.findings{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+@media (max-width:860px){.findings{grid-template-columns:minmax(0,1fr)}}
+.stat{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 14px}
+.stat .big{font-family:var(--f-display);font-weight:700;font-size:38px;line-height:1;font-variant-numeric:tabular-nums}
+.stat .big span{color:var(--muted);font-weight:500;font-size:24px}
+.stat p{margin:6px 0 0;font-size:14px;color:var(--muted)}
+.howto{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 14px}
+.howto h2{font-family:var(--f-display);font-weight:600;font-size:22px;margin:0}
+.howto dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:10px 0 0;font-size:14px}
+.howto dt{font-weight:600}
+.howto dd{margin:0;color:var(--muted)}
+@media (max-width:520px){.howto dl{grid-template-columns:minmax(0,1fr)} .howto dd{margin-bottom:6px}}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{width:18px;height:0;border-top:2px dashed var(--off)}
+.sw.d{border-top-color:var(--def)}
+.dot{width:10px;height:10px;border-radius:50%}
+.src{font-size:12px;color:var(--muted)}
+@media (max-width:860px){.transport{position:sticky;bottom:0;z-index:5;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));box-shadow:0 -6px 18px rgba(0,0,0,.12)} .read .val{font-size:20px} .pill{font-size:15px;white-space:normal} .legend{display:none}}
+.src a{color:inherit}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Liga ACB 2025-26 · tracking study · closeouts</div>
+    <h1>Flew out or under control: the half-second that decides a closeout</h1>
+    <p class="lede">Two closeouts, synced to the catch. On the left the defender is still flying at the shooter when he puts it on the floor. On the right he has already gathered himself. Watch the two dashed rings around the rim: they mark how far each player is from the basket, and the defender is beaten when the attacker's ring slips inside his.</p>
+  </header>
+
+  <div class="split">
+    <section class="pane" id="paneA" aria-label="Flew out example"></section>
+    <section class="pane" id="paneB" aria-label="Under control example"></section>
+  </div>
+
+  <div class="transport">
+    <div class="trow">
+      <button id="play" type="button">Play</button>
+      <button id="toCatch" type="button">Jump to catch</button>
+      <div class="speeds" role="group" aria-label="Playback speed">
+        <button type="button" data-s="0.25">¼×</button>
+        <button type="button" data-s="0.5" aria-pressed="true">½×</button>
+        <button type="button" data-s="1">1×</button>
+      </div>
+      <span class="time" id="tlabel"></span>
+    </div>
+    <input type="range" id="scrub" min="0" max="1000" step="1" value="0" aria-label="Time relative to the catch">
+    <div class="legend">
+      <span><i class="dot" style="background:var(--off)"></i>Ball handler</span>
+      <span><i class="dot" style="background:var(--def)"></i>His defender</span>
+      <span><i class="sw"></i>Ball handler's distance to rim</span>
+      <span><i class="sw d"></i>Defender's distance to rim</span>
+      <span>Arrow: defender's direction and speed</span>
+    </div>
+  </div>
+
+  <div class="findings">
+    <div class="stat"><div class="big">55% <span>vs</span> 29%</div><p>Drives without a screen where the defender got beaten, when he was still closing at 5+ ft/s half a second after the catch versus when he had slowed down. 159 drives across 10 games.</p></div>
+    <div class="stat"><div class="big">0.56 s</div><p>Median time from the start of the attack to the ball handler getting past. The defender is beaten well before he is passed.</p></div>
+    <div class="stat"><div class="big">91%</div><p>Share of beaten closeout defenders still moving away from the rim when the attack started. Across all actions it is 71%.</p></div>
+  </div>
+
+  <section class="howto">
+    <h2>How "beaten" is measured</h2>
+    <dl>
+      <dt>Cushion</dt><dd>Ball handler's distance to the rim minus his defender's. Positive means the defender is between his man and the basket.</dd>
+      <dt>Beaten</dt><dd>Cushion falls to −1 ft or worse and stays there for a fifth of a second, with both players seen on camera.</dd>
+      <dt>Beat moment</dt><dd>The start of the attack that ends in the crossing: the ball handler is moving toward the rim at 3+ ft/s and faster than his defender. Each play gets its own moment instead of a fixed lookback.</dd>
+      <dt>Closing speed</dt><dd>How fast the defender is moving toward the ball handler, in feet per second.</dd>
+    </dl>
+  </section>
+
+  <p class="src">Data: <a href="https://github.com/SkillCorner/opendata-basketball" target="_blank" rel="noopener">SkillCorner Open Data, Basketball</a> (MIT), 10 ACB 2025-26 games, broadcast tracking at 25 fps. Clips are closeouts that ended in a drive. Positions mirrored so every attack goes toward the same basket; court drawn to FIBA dimensions in feet.</p>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function(){
+const CLIPS=JSON.parse(document.getElementById('data').textContent);
+const FPS=25, HX=-40.76;
+const $=s=>document.querySelector(s);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+let col={};
+function readTokens(){const cs=getComputedStyle(document.documentElement);for(const k of ['court','court-paint','court-line','off','off-ink','def','def-ink','ghost','ball','beat','hold','ink','muted','rule','panel'])col[k]=cs.getPropertyValue('--'+k).trim();}
+readTokens();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readTokens();drawAll();});
+new MutationObserver(()=>{readTokens();drawAll();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+const VX0=-48.9, VY=27.6; // view: baseline at top, half-court-ish at bottom
+const nm=s=>s.replace('Feliz Sarita','Feliz').replace('Fernandez Bernabe','Fernández').replace('Ortega Soriano','Ortega');
+function fmtClock(s){if(s==null)return '';return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+
+/* ---- one panel ---- */
+function Pane(root,kind){
+  const list=CLIPS.filter(c=>c.kind===kind);
+  const isFlew=kind==='flew';
+  root.innerHTML=`<div class="pane-head"><div class="tag ${isFlew?'flew':'ctrl'}">${isFlew?'Flew out':'Under control'}<small>${isFlew?'Still closing hard at the catch, then beaten':'Gathered at the catch, then held'}</small></div><div class="picks" role="group" aria-label="Choose clip"></div></div>
+  <div class="meta"></div>
+  <div class="courtbox"><canvas role="img" aria-label="Half-court replay"></canvas></div>
+  <div class="read"><div><span class="lab">Cushion</span><span class="val" data-k="cush">–</span></div><div><span class="lab">Closing speed</span><span class="val" data-k="close">–</span></div><div><span class="lab">State</span><span class="pill neutral" data-k="state">–</span></div></div>
+  <div class="mini"><canvas role="img" aria-label="Cushion over time"></canvas></div>`;
+  const [cv,mc]=root.querySelectorAll('canvas'); const cx=cv.getContext('2d'), mx=mc.getContext('2d');
+  const P={root,list,clip:list[0],cv,cx,mc,mx,S:10,MW:0,MH:0};
+  const picks=root.querySelector('.picks');
+  list.forEach((c,i)=>{const b=document.createElement('button');b.type='button';b.textContent=nm(c.players[String(c.att)].last)+' vs '+nm(c.players[String(c.dfn)].last);b.setAttribute('aria-pressed',i===0);
+    b.onclick=()=>{P.clip=c;picks.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));setMeta();rebound();drawAll();};picks.appendChild(b);});
+  function setMeta(){const c=P.clip;root.querySelector('.meta').innerHTML='';const m=root.querySelector('.meta');
+    const s=document.createElement('span');
+    s.innerHTML=`<b></b> on <b></b> · ${c.offTeam} vs ${c.defTeam}, ${c.date.slice(8,10)}/${c.date.slice(5,7)}/${c.date.slice(0,4)}, Q${c.period} ${fmtClock(c.clock[c.catch][0])} · 0.5 s after catch: ${c.closing05} ft/s closing, ${c.dist05} ft apart · Result: <b></b>`;
+    const bs=s.querySelectorAll('b'); bs[0].textContent=nm(c.attName); bs[1].textContent=nm(c.dfnName); bs[2].textContent=c.result; m.appendChild(s);}
+  setMeta();
+  P.frameAt=tau=>Math.max(0,Math.min(P.clip.ball.length-1,P.clip.catch+tau*FPS));
+  P.setMeta=setMeta;
+  return P;
+}
+const A=Pane($('#paneA'),'flew'), B=Pane($('#paneB'),'control');
+const panes=[A,B];
+
+/* ---- shared time ---- */
+let tau=0, tmin=0, tmax=0, playing=false, speed=0.5, last=0;
+function rebound(){tmin=-Math.max(...panes.map(p=>p.clip.catch))/FPS; tmax=Math.max(...panes.map(p=>(p.clip.ball.length-1-p.clip.catch)))/FPS; tau=Math.max(tmin,Math.min(tmax,tau));}
+rebound(); tau=tmin;
+
+function lerpPt(arr,f){const i=Math.floor(f),u=f-i;const a=arr[i],b=arr[Math.min(i+1,arr.length-1)];if(!a)return b;if(!b)return a;return [a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u,a[2]!==undefined?a[2]+(b[2]-a[2])*u:0,a[2]];}
+function seriesAt(s,f){const i=Math.floor(f),u=f-i;const a=s[i],b=s[Math.min(i+1,s.length-1)];if(a==null)return b;if(b==null)return a;return a+(b-a)*u;}
+
+function sizeC(c,ctx){const r=c.getBoundingClientRect();const d=window.devicePixelRatio||1;c.width=Math.round(r.width*d);c.height=Math.round(r.height*d);ctx.setTransform(d,0,0,d,0,0);return r;}
+
+function drawCourt(P){
+  const g=P.cx,S=P.S; const X=(x,y)=>[(VY-y)*S,(x-VX0)*S];
+  g.fillStyle=col.court; g.fillRect(0,0,2*VY*S,42.9*S);
+  g.strokeStyle=col['court-line']; g.lineWidth=Math.max(1,S*0.17);
+  const ln=(pts)=>{g.beginPath();pts.forEach((p,i)=>{const q=X(p[0],p[1]);i?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]);});g.stroke();};
+  // key
+  const k1=X(-45.93,8.04),k2=X(-26.9,-8.04); g.fillStyle=col['court-paint']; g.fillRect(k1[0],k1[1],k2[0]-k1[0],k2[1]-k1[1]); g.strokeRect(k1[0],k1[1],k2[0]-k1[0],k2[1]-k1[1]);
+  ln([[-45.93,24.6],[-45.93,-24.6]]); ln([[-45.93,24.6],[-6,24.6]]); ln([[-45.93,-24.6],[-6,-24.6]]);
+  let ft=X(-26.9,0); g.beginPath(); g.arc(ft[0],ft[1],5.91*S,0,Math.PI*2); g.stroke();
+  const arc=[];const p0=Math.acos(4.68/22.15); for(let i=0;i<=60;i++){const p=-p0+2*p0*i/60; arc.push([HX+22.15*Math.cos(p),22.15*Math.sin(p)]);}
+  ln([[-45.93,21.65],...arc.reverse(),[-45.93,-21.65]]);
+  const h=X(HX,0); g.beginPath(); g.arc(h[0],h[1],4.1*S,0,Math.PI); g.stroke();
+  ln([[-41.99,2.95],[-41.99,-2.95]]);
+  g.beginPath(); g.arc(h[0],h[1],0.75*S,0,Math.PI*2); g.strokeStyle=col.ball; g.stroke();
+  return X;
+}
+
+function drawPane(P){
+  const c=P.clip, g=P.cx, S=P.S; const f=P.frameAt(tau); const fi=Math.round(f);
+  const X=drawCourt(P); const H=X(HX,0);
+  const att=String(c.att), dfn=String(c.dfn);
+  const a=lerpPt(c.tracks[att],f), d=lerpPt(c.tracks[dfn],f);
+  // distance rings around the rim (clipped to court)
+  g.save(); const c1=X(-45.93,24.6),c2=X(-6,-24.6); g.beginPath(); g.rect(c1[0],c1[1],c2[0]-c1[0],c2[1]-c1[1]); g.clip();
+  g.setLineDash([S*0.8,S*0.6]); g.lineWidth=Math.max(1.5,S*0.25);
+  if(d){g.strokeStyle=col.def; g.beginPath(); g.arc(H[0],H[1],Math.hypot(d[0]-HX,d[1])*S,0,Math.PI*2); g.stroke();}
+  if(a){g.strokeStyle=col.off; g.beginPath(); g.arc(H[0],H[1],Math.hypot(a[0]-HX,a[1])*S,0,Math.PI*2); g.stroke();}
+  g.setLineDash([]); g.restore();
+  // trails for the two focus players
+  for(const [id,cc] of [[att,col.off],[dfn,col.def]]){g.strokeStyle=cc; g.globalAlpha=.6; g.lineWidth=Math.max(1,S*0.25); g.beginPath(); let st=false;
+    for(let k=Math.max(0,fi-30);k<=fi;k++){const p=c.tracks[id][k]; if(!p){st=false;continue;} const q=X(p[0],p[1]); st?g.lineTo(q[0],q[1]):g.moveTo(q[0],q[1]); st=true;} g.stroke(); g.globalAlpha=1;}
+  // players
+  const R=1.35;
+  for(const id of c.ids.map(String)){ const p=lerpPt(c.tracks[id],f); if(!p)continue; const q=X(p[0],p[1]); const pl=c.players[id]; const focus=id===att||id===dfn;
+    const fill=focus?(pl.off?col.off:col.def):col.ghost;
+    g.fillStyle=fill; g.beginPath(); g.arc(q[0],q[1],R*S,0,Math.PI*2); g.fill();
+    if(!p[3]){g.strokeStyle=col.muted; g.setLineDash([S*.35,S*.3]); g.lineWidth=Math.max(1,S*.18); g.beginPath(); g.arc(q[0],q[1],(R+.25)*S,0,Math.PI*2); g.stroke(); g.setLineDash([]);}
+    if(focus){ g.fillStyle=pl.off?col['off-ink']:col['def-ink']; g.font=`600 ${Math.max(9,S*1.3)}px IBM Plex Sans, system-ui, sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(pl.jersey,q[0],q[1]+.5);
+      g.fillStyle=col.ink; g.font=`600 ${Math.max(10,S*1.25)}px IBM Plex Sans, system-ui, sans-serif`; g.textBaseline='alphabetic'; g.fillText(nm(pl.last),q[0],q[1]-(R+.8)*S); }
+  }
+  // defender velocity arrow
+  const k0=Math.max(0,fi-3); const p0=c.tracks[dfn][k0], p1=c.tracks[dfn][fi];
+  if(p0&&p1&&fi>k0){ const vx=(p1[0]-p0[0])*FPS/(fi-k0), vy=(p1[1]-p0[1])*FPS/(fi-k0); const sp=Math.hypot(vx,vy);
+    if(sp>1){ const q=X(d[0],d[1]); const e=X(d[0]+vx*0.35,d[1]+vy*0.35); g.strokeStyle=col.ink; g.fillStyle=col.ink; g.lineWidth=Math.max(1.5,S*.28);
+      g.beginPath(); g.moveTo(q[0],q[1]); g.lineTo(e[0],e[1]); g.stroke(); const an=Math.atan2(e[1]-q[1],e[0]-q[0]); const hs=S*1.1;
+      g.beginPath(); g.moveTo(e[0],e[1]); g.lineTo(e[0]-hs*Math.cos(an-.45),e[1]-hs*Math.sin(an-.45)); g.lineTo(e[0]-hs*Math.cos(an+.45),e[1]-hs*Math.sin(an+.45)); g.closePath(); g.fill(); } }
+  // ball
+  const b=lerpPt(c.ball,f); if(b){const z=Math.max(0,b[2]); const q=X(b[0],b[1]); g.fillStyle=col.ball; g.beginPath(); g.arc(q[0],q[1],(0.55+z*0.045)*S,0,Math.PI*2); g.fill(); g.strokeStyle=col['court-line']; g.lineWidth=1; g.stroke();}
+  // event flashes
+  const flash=(fr,txt,color)=>{ if(fr==null)return; const dt=(f-fr)/FPS; if(dt<0||dt>0.9)return; const q=X(a[0],a[1]); g.globalAlpha=1-dt/0.9; g.strokeStyle=color; g.lineWidth=Math.max(2,S*.35);
+    g.beginPath(); g.arc(q[0],q[1],(R+1+dt*4)*S,0,Math.PI*2); g.stroke(); g.globalAlpha=1;
+    g.font=`700 ${Math.max(13,S*1.9)}px Barlow Condensed, Arial Narrow, sans-serif`; g.textAlign='left'; g.fillStyle=color; g.fillText(txt,S*1.2,S*2.6); };
+  if(c.beat!=null && c.beat===c.cross) flash(c.cross,'BEATEN',col.beat); else { flash(c.beat,'ATTACK STARTS',col.beat); flash(c.cross,'BEATEN',col.beat); }
+  flash(c.catch,'CATCH',col.ink);
+  // readouts
+  const cu=seriesAt(c.cush,f), cl=seriesAt(c.closing,f);
+  const ce=P.root.querySelector('[data-k=cush]'), cle=P.root.querySelector('[data-k=close]'), st=P.root.querySelector('[data-k=state]');
+  ce.textContent=cu==null?'–':(cu>=0?cu.toFixed(1)+' ft':'−'+Math.abs(cu).toFixed(1)+' ft'); ce.style.color=cu!=null&&cu<0?col.beat:'';
+  cle.textContent=cl==null?'–':cl.toFixed(1)+' ft/s';
+  let s='Closing out',cls='neutral';
+  if(f>=c.catch){ s='Holding'; cls='hold'; }
+  if(c.beat!=null&&f>=c.beat){ s='Attack starts'; cls='beat'; }
+  if(c.cross!=null&&f>=c.cross){ s='Beaten'; cls='beat'; }
+  if(f>c.end+3){ s=c.result; cls=c.kind==='flew'?'beat':'hold'; }
+  st.textContent=s; st.className='pill '+cls;
+  drawMini(P,f);
+}
+
+function drawMini(P,f){
+  const c=P.clip, g=P.mx, W=P.MW, Hh=P.MH; g.clearRect(0,0,W,Hh);
+  const pl=34,pr=8,pt=8,pb=18, w=W-pl-pr, h=Hh-pt-pb; const n=c.cush.length;
+  const ymin=-6,ymax=12; const px=i=>pl+((i-c.catch)/FPS-tmin)/(tmax-tmin)*w, py=v=>pt+(ymax-Math.max(ymin,Math.min(ymax,v)))/(ymax-ymin)*h;
+  g.font='11px IBM Plex Mono, monospace'; g.fillStyle=col.muted; g.textAlign='right'; g.textBaseline='middle';
+  for(const v of [-6,0,6,12]){g.strokeStyle=v===0?col.muted:col.rule; g.lineWidth=1; g.beginPath(); g.moveTo(pl,py(v)); g.lineTo(pl+w,py(v)); g.stroke(); g.fillText((v>0?'+':'')+v,pl-4,py(v));}
+  g.save(); g.beginPath(); g.rect(pl,py(0),w,py(ymin)-py(0)); g.clip(); g.fillStyle=col.beat; g.globalAlpha=.1; g.fillRect(pl,py(0),w,py(ymin)-py(0)); g.restore(); g.globalAlpha=1;
+  g.textAlign='center'; g.textBaseline='top';
+  for(let s=Math.ceil(tmin);s<=Math.floor(tmax);s++){ g.fillText((s>0?'+':'')+s+'s',pl+(s-tmin)/(tmax-tmin)*w,pt+h+4); }
+  const vline=(i,color,lab)=>{ if(i==null)return; g.strokeStyle=color; g.lineWidth=1.5; g.setLineDash([3,3]); g.beginPath(); g.moveTo(px(i),pt); g.lineTo(px(i),pt+h); g.stroke(); g.setLineDash([]); g.fillStyle=color; g.textAlign='left'; g.textBaseline='top'; g.font='600 11px IBM Plex Sans, sans-serif'; g.fillText(lab,px(i)+3,pt); };
+  vline(c.catch,col.muted,'catch'); if(c.beat!=null&&c.beat!==c.catch)vline(c.beat,col.beat,'attack'); if(c.cross!=null)vline(c.cross,col.beat,'beaten');
+  g.strokeStyle=col.ink; g.lineWidth=2; g.beginPath(); let st=false;
+  for(let i=0;i<n;i++){const v=c.cush[i]; if(v==null){st=false;continue;} st?g.lineTo(px(i),py(v)):g.moveTo(px(i),py(v)); st=true;} g.stroke();
+  g.textAlign='right'; g.textBaseline='top'; g.fillStyle=col.muted; g.font='11px IBM Plex Mono, monospace'; g.fillText('cushion, ft',pl+w-2,pt+1);
+  g.strokeStyle=col.ink; g.lineWidth=1.5; g.beginPath(); g.moveTo(px(f),pt); g.lineTo(px(f),pt+h); g.stroke();
+}
+
+function drawAll(){ panes.forEach(drawPane); const s=$('#scrub'); s.value=Math.round((tau-tmin)/(tmax-tmin)*1000); $('#tlabel').textContent=(tau>=0?'+':'−')+Math.abs(tau).toFixed(2)+' s from catch'; }
+function resize(){ panes.forEach(P=>{const r=sizeC(P.cv,P.cx); P.S=r.width/(2*VY); const m=sizeC(P.mc,P.mx); P.MW=m.width; P.MH=m.height;}); drawAll(); }
+panes.forEach(P=>{new ResizeObserver(resize).observe(P.cv);});
+
+/* ---- controls ---- */
+const playBtn=$('#play');
+function setPlaying(p){ playing=p; playBtn.textContent=p?'Pause':'Play'; if(p){ if(tau>=tmax) tau=tmin; last=performance.now(); requestAnimationFrame(loop);} }
+function loop(now){ if(!playing)return; const dt=Math.min(.1,(now-last)/1000); last=now; tau+=dt*speed; if(tau>=tmax){tau=tmax;setPlaying(false);} drawAll(); if(playing)requestAnimationFrame(loop); }
+playBtn.onclick=()=>setPlaying(!playing);
+$('#toCatch').onclick=()=>{tau=0; setPlaying(false); drawAll();};
+$('#scrub').oninput=e=>{tau=tmin+(+e.target.value/1000)*(tmax-tmin); setPlaying(false); drawAll();};
+document.querySelectorAll('.speeds button').forEach(b=>b.onclick=()=>{speed=+b.dataset.s; document.querySelectorAll('.speeds button').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+document.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT'&&e.target.type==='range'&&e.code!=='Space')return; if(e.code==='Space'){e.preventDefault();setPlaying(!playing);} });
+
+resize();
+if(!reduce) setTimeout(()=>setPlaying(true),700);
+})();
+</script>

@@ -1,0 +1,336 @@
+<title>Huertas Pull-Up Replay</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: film-room telestrator — scoreboard strip, full-court canvas as hero, transport + separation trace, then play-by-play beside the key. */
+:root{
+  --bg:#eef1f4; --panel:#ffffff; --ink:#18202a; --muted:#5d6876; --rule:#d5dbe2;
+  --court:#e2c99e; --court-paint:#d4b585; --court-line:rgba(40,28,14,.72);
+  --off:#f0b300; --off-ink:#1d1600; --def:#3f4fc4; --def-ink:#ffffff;
+  --ball:#e35d12; --accent:#c48a00; --focus:#3f4fc4; --trace:#18202a; --trace-fill:rgba(24,32,42,.08);
+  --f-display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0f1318; --panel:#171c23; --ink:#e7ebf0; --muted:#97a2b0; --rule:#2a313b;
+  --court:#2b2620; --court-paint:#352d24; --court-line:rgba(236,224,204,.62);
+  --off:#f5bf1a; --off-ink:#1d1600; --def:#7d8cf0; --def-ink:#0d1030;
+  --ball:#ff7a2e; --accent:#f5bf1a; --focus:#9aa6ff; --trace:#e7ebf0; --trace-fill:rgba(231,235,240,.08); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1318; --panel:#171c23; --ink:#e7ebf0; --muted:#97a2b0; --rule:#2a313b;
+  --court:#2b2620; --court-paint:#352d24; --court-line:rgba(236,224,204,.62);
+  --off:#f5bf1a; --off-ink:#1d1600; --def:#7d8cf0; --def-ink:#0d1030;
+  --ball:#ff7a2e; --accent:#f5bf1a; --focus:#9aa6ff; --trace:#e7ebf0; --trace-fill:rgba(231,235,240,.08); color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:16px}
+.eyebrow{font-family:var(--f-mono);font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--f-display);font-weight:700;font-size:clamp(28px,4.4vw,44px);line-height:1;margin:4px 0 0;text-wrap:balance;letter-spacing:.01em}
+.lede{margin:8px 0 0;color:var(--muted);max-width:68ch}
+.board{display:flex;flex-wrap:wrap;align-items:stretch;gap:1px;background:var(--rule);border:1px solid var(--rule);border-radius:6px;overflow:hidden}
+.board>div{background:var(--panel);padding:8px 14px;display:flex;flex-direction:column;justify-content:center;flex:1 1 auto}
+.board .lab{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.board .val{font-family:var(--f-display);font-weight:600;font-size:26px;line-height:1.1;font-variant-numeric:tabular-nums}
+.team{display:flex;align-items:center;gap:8px}
+.chip{width:12px;height:12px;border-radius:50%;flex:none}
+.chip.off{background:var(--off)}.chip.def{background:var(--def)}
+.score-bump{color:var(--accent)}
+.stage{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:10px;display:grid;gap:10px}
+.courtbox{position:relative;width:100%;aspect-ratio:97.86/55.21;max-width:100%}
+.stage{position:relative}
+canvas{display:block;width:100%;height:100%}
+.callout{position:absolute;right:10px;top:10px;max-width:min(360px,70%);background:var(--panel);border:1px solid var(--rule);border-left:3px solid var(--accent);border-radius:4px;padding:6px 10px;font-size:13px;line-height:1.35;pointer-events:none;transition:opacity .2s}
+.callout b{display:block;font-family:var(--f-display);font-size:17px;font-weight:600;letter-spacing:.01em}
+.transport{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+button{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:4px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--muted)}
+button:focus-visible,input:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+#play{min-width:84px;font-weight:600}
+.speeds{display:flex;gap:4px}
+.speeds button{padding:6px 9px;font-family:var(--f-mono);font-size:13px}
+.toggle{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer}
+.time{margin-left:auto;font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.scrub{position:relative;padding-top:14px}
+.scrub input{width:100%;margin:0;accent-color:var(--ink)}
+.ticks{position:absolute;left:0;right:0;top:0;height:12px}
+.ticks span{position:absolute;top:0;width:2px;height:10px;transform:translateX(-1px);border-radius:1px;background:var(--muted)}
+.ticks span.pick,.ticks span.screen{background:var(--def)}
+.ticks span.shot,.ticks span.make{background:var(--accent);height:12px;width:3px}
+.trace{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;display:grid;gap:6px}
+.trace h2,.panel h2{font-family:var(--f-display);font-weight:600;font-size:20px;margin:0;letter-spacing:.01em}
+.trace p{margin:0;color:var(--muted);font-size:13px;max-width:72ch}
+.sepbox{position:relative;width:100%;height:150px}
+.lower{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:16px}
+@media (max-width:820px){.lower{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:12px 14px;min-width:0}
+ol.pbp{list-style:none;margin:8px 0 0;padding:0;display:grid}
+ol.pbp li{border-top:1px solid var(--rule)}
+ol.pbp button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:62px 14px minmax(0,1fr);gap:10px;align-items:start;width:100%;padding:8px 6px;cursor:pointer;border-radius:4px}
+ol.pbp button:hover{background:var(--bg)}
+ol.pbp button:focus-visible{outline:2px solid var(--focus)}
+ol.pbp li.now button{background:var(--bg)}
+ol.pbp li.now .gc{color:var(--ink)}
+.gc{font-family:var(--f-mono);font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums;padding-top:1px}
+.dot{width:10px;height:10px;border-radius:50%;margin-top:6px;background:var(--muted)}
+.dot.pick,.dot.screen{background:var(--def)}.dot.shot,.dot.make{background:var(--accent)}
+.ev-t{font-weight:600}
+.ev-b{display:block;color:var(--muted);font-size:13px}
+.roster{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:8px}
+.roster h3{margin:0 0 4px;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px}
+.roster ul{list-style:none;margin:0;padding:0;font-size:13px;display:grid;gap:2px}
+.roster li{display:flex;gap:8px}
+.roster .j{font-family:var(--f-mono);color:var(--muted);min-width:2ch;text-align:right}
+dl.gloss{margin:12px 0 0;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 12px;font-size:13px}
+dl.gloss dt{font-family:var(--f-mono);font-weight:500}
+dl.gloss dd{margin:0;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.ring{width:12px;height:12px;border-radius:50%;border:2px solid var(--ink)}
+.dash{width:12px;height:12px;border-radius:50%;border:2px dashed var(--muted)}
+.src{font-size:12px;color:var(--muted)}
+.src a{color:inherit}
+@media (max-width:640px){.callout{position:static;max-width:none;min-height:5.2em}}
+@media (prefers-reduced-motion:reduce){.callout{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Liga ACB 2025-26 · 19 Apr 2026 · Q4</div>
+    <h1>Four screens, one pull-up: Huertas beats Campazzo late</h1>
+    <p class="lede">Tenerife leads Real Madrid 83–81 with 2:48 left. Marcelinho Huertas keeps the ball for 21 dribbles and four ball screens before hitting a three over Facundo Campazzo. Replayed from SkillCorner broadcast tracking at 25 frames per second.</p>
+  </header>
+
+  <div class="board" aria-label="Scoreboard">
+    <div><span class="lab team"><i class="chip def"></i>Real Madrid</span><span class="val" id="sHome">81</span></div>
+    <div><span class="lab team"><i class="chip off"></i>Lenovo Tenerife</span><span class="val" id="sAway">83</span></div>
+    <div><span class="lab">Game clock</span><span class="val" id="gclock">2:48</span></div>
+    <div><span class="lab">Shot clock</span><span class="val" id="sclock">–</span></div>
+    <div><span class="lab">Huertas to nearest defender</span><span class="val" id="sepNow">–</span></div>
+  </div>
+
+  <section class="stage" aria-label="Replay">
+    <div class="courtbox" id="courtbox">
+      <canvas id="court" role="img" aria-label="Animated court replay of player and ball positions"></canvas>
+    </div>
+    <div class="callout" id="callout" style="opacity:0"><b id="coT"></b><span id="coB"></span></div>
+    <div class="transport">
+      <button id="play" type="button">Play</button>
+      <button id="restart" type="button">Restart</button>
+      <div class="speeds" role="group" aria-label="Playback speed">
+        <button type="button" data-s="0.25">¼×</button>
+        <button type="button" data-s="0.5">½×</button>
+        <button type="button" data-s="1" aria-pressed="true">1×</button>
+        <button type="button" data-s="2">2×</button>
+      </div>
+      <label class="toggle"><input type="checkbox" id="trails" checked> Trails</label>
+      <label class="toggle"><input type="checkbox" id="links" checked> Defender link</label>
+      <span class="time" id="tlabel">0.0 s</span>
+    </div>
+    <div class="scrub">
+      <div class="ticks" id="ticks" aria-hidden="true"></div>
+      <input type="range" id="scrub" min="0" max="545" step="1" value="0" aria-label="Replay position">
+    </div>
+  </section>
+
+  <section class="trace" aria-label="Separation trace">
+    <h2>How much room did Huertas have?</h2>
+    <p>Distance from Huertas to the closest Real Madrid player, every frame. Blue ticks mark screens. Campazzo fights through every one and never lets the gap grow past 8 ft. Shermadini's second screen squeezes it to 2.4 ft, then Huertas steps back into 5.4 ft of room at the release, enough for SkillCorner to grade the shot open. Its shot-quality model still rated it 37 out of 100.</p>
+    <div class="sepbox"><canvas id="sep" role="img" aria-label="Line chart of Huertas's distance to nearest defender over the possession"></canvas></div>
+  </section>
+
+  <div class="lower">
+    <section class="panel">
+      <h2>Play-by-play</h2>
+      <ol class="pbp" id="pbp"></ol>
+    </section>
+    <section class="panel">
+      <h2>On the floor</h2>
+      <div class="roster" id="roster"></div>
+      <dl class="gloss">
+        <dt>under</dt><dd>Ball defender ducks beneath the screen, giving up space for a shot.</dd>
+        <dt>over</dt><dd>Ball defender chases over the top to stay attached.</dd>
+        <dt>soft</dt><dd>Screener's defender sags back toward the paint.</dd>
+        <dt>show</dt><dd>Screener's defender steps up to stall the ball handler.</dd>
+      </dl>
+      <div class="legend">
+        <span><i class="ring"></i>Huertas and Campazzo</span>
+        <span><i class="dash"></i>Position extrapolated, not seen on camera</span>
+      </div>
+    </section>
+  </div>
+
+  <p class="src">Data: <a href="https://github.com/SkillCorner/opendata-basketball" target="_blank" rel="noopener">SkillCorner Open Data, Basketball</a> (MIT), game 184439, chance 4-186, frames 131745–132290. Court drawn to FIBA dimensions in feet. Final: Real Madrid 90, Lenovo Tenerife 95.</p>
+</div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+(function(){
+const D=JSON.parse(document.getElementById('data').textContent);
+const N=D.ball.length, FPS=25, F0=D.meta.startFrame;
+const L=91.86, W=49.21, M=3; // court length/width in ft, margin
+const HOOP=40.76;
+const ids=D.ids.map(String), P=D.players, T=D.tracks;
+const SH=String(D.meta.shooter), CD=String(D.meta.primaryDef);
+const offTeam=D.meta.offSide;
+const $=s=>document.querySelector(s);
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+let col={};
+function readTokens(){const cs=getComputedStyle(document.documentElement);
+  for(const k of ['court','court-paint','court-line','off','off-ink','def','def-ink','ball','ink','muted','rule','accent','panel','trace','trace-fill','def'])col[k]=cs.getPropertyValue('--'+k).trim();}
+readTokens();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',()=>{readTokens();drawAll();});
+new MutationObserver(()=>{readTokens();drawAll();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+/* ---------- court canvas ---------- */
+const cv=$('#court'), cx=cv.getContext('2d');
+let S=10, dpr=1;
+function sizeCanvas(c,ctx){const r=c.getBoundingClientRect();dpr=window.devicePixelRatio||1;c.width=Math.round(r.width*dpr);c.height=Math.round(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);return r;}
+let XMIN=-L/2-M, XMAX=L/2+M;
+const X=x=>(x-XMIN)*S, Y=y=>(W/2-y+M)*S;
+
+function drawCourt(){
+  const g=cx; g.fillStyle=col.court; g.fillRect(0,0,(XMAX-XMIN)*S,(W+2*M)*S);
+  g.strokeStyle=col['court-line']; g.lineWidth=Math.max(1,S*0.17); g.lineJoin='round';
+  g.strokeRect(X(-L/2),Y(W/2),L*S,W*S);
+  g.beginPath();g.moveTo(X(0),Y(W/2));g.lineTo(X(0),Y(-W/2));g.stroke();
+  g.beginPath();g.arc(X(0),Y(0),5.91*S,0,Math.PI*2);g.stroke();
+  for(const sd of [-1,1]){
+    const bx=sd*L/2, hx=sd*HOOP, ftx=sd*(L/2-19.03);
+    g.fillStyle=col['court-paint'];
+    const kx=Math.min(X(bx),X(ftx)); g.fillRect(kx,Y(8.04),Math.abs(X(bx)-X(ftx)),16.08*S);
+    g.strokeRect(kx,Y(8.04),Math.abs(X(bx)-X(ftx)),16.08*S);
+    g.beginPath();g.arc(X(ftx),Y(0),5.91*S,0,Math.PI*2);g.stroke();
+    // three-point line
+    const cy=21.65, dx=Math.sqrt(22.15*22.15-cy*cy);
+    g.beginPath();g.moveTo(X(bx),Y(cy));g.lineTo(X(hx-sd*dx),Y(cy));
+    const a=Math.asin(cy/22.15);
+    if(sd<0){g.arc(X(hx),Y(0),22.15*S,-a,a,false);} else {g.arc(X(hx),Y(0),22.15*S,Math.PI+a,Math.PI-a,true);}
+    g.lineTo(X(bx),Y(-cy));g.stroke();
+    // restricted area
+    g.beginPath(); if(sd<0) g.arc(X(hx),Y(0),4.1*S,-Math.PI/2,Math.PI/2); else g.arc(X(hx),Y(0),4.1*S,Math.PI/2,Math.PI*1.5); g.stroke();
+    // backboard + rim
+    g.beginPath();g.moveTo(X(sd*41.99),Y(2.95));g.lineTo(X(sd*41.99),Y(-2.95));g.lineWidth=Math.max(1.5,S*0.3);g.stroke();g.lineWidth=Math.max(1,S*0.17);
+    g.beginPath();g.arc(X(hx),Y(0),0.75*S,0,Math.PI*2);g.strokeStyle=col.ball;g.stroke();g.strokeStyle=col['court-line'];
+  }
+  // attack arrow label
+  g.fillStyle=col['court-line']; g.font=`500 ${Math.max(10,S*1.25)}px ${getComputedStyle(document.documentElement).getPropertyValue('--f-mono')}`;
+  g.textAlign='center'; g.fillText('◀ TENERIFE ATTACKS', X(-L/4), Y(-W/2)+Math.max(13,S*2));
+}
+
+function lerp(a,b,u){return a+(b-a)*u}
+function posAt(arr,t){const i=Math.floor(t),u=t-i;const a=arr[i],b=arr[Math.min(i+1,N-1)];if(!a)return b;if(!b)return a;return [lerp(a[0],b[0],u),lerp(a[1],b[1],u),lerp(a[2],b[2],u),a[3]];}
+
+let t=0, playing=false, speed=1, showTrails=true, showLinks=true;
+
+function activeEvent(fr){ // event whose window covers frame
+  let best=null; for(const e of D.events){const s=e.frame-F0;const end=(e.kind==='make'?N:s+38);if(fr>=s-6&&fr<=end)best=e;} return best;}
+
+function drawFrame(){
+  drawCourt(); const g=cx; const fr=t;
+  const fi=Math.round(fr);
+  const ev=activeEvent(fr);
+  const hi=new Set(ev&&ev.actors?ev.actors.map(String):[]);
+  // trails
+  if(showTrails){ for(const id of ids){const team=P[id].side===offTeam?'off':'def';
+      g.strokeStyle=col[team]; g.lineWidth=Math.max(1,S*0.22); g.globalAlpha=0.55; g.beginPath(); let st=false;
+      for(let k=Math.max(0,fi-50);k<=fi;k++){const p=T[id][k];if(!p){st=false;continue;} if(!st){g.moveTo(X(p[0]),Y(p[1]));st=true;} else g.lineTo(X(p[0]),Y(p[1]));}
+      g.stroke(); }
+    g.globalAlpha=1; }
+  // shot arc after release
+  const rel=D.meta.shotFrame-F0, mk=D.meta.makeFrame-F0;
+  if(fr>=rel){ const s=T[SH][rel]; g.setLineDash([S*0.6,S*0.6]); g.strokeStyle=col.ball; g.lineWidth=Math.max(1,S*0.2);
+    g.beginPath(); g.moveTo(X(s[0]),Y(s[1])); g.quadraticCurveTo(X((s[0]-HOOP)/2-4),Y(s[1]/2+6),X(-HOOP),Y(0)); g.stroke(); g.setLineDash([]); }
+  // defender link: Huertas to nearest Real Madrid player
+  const hp=posAt(T[SH],fr);
+  let near=null,nd=1e9; for(const id of ids){ if(P[id].side===offTeam)continue; const p=posAt(T[id],fr); if(!p||!hp)continue; const d=Math.hypot(p[0]-hp[0],p[1]-hp[1]); if(d<nd){nd=d;near=p;} }
+  if(showLinks&&near&&hp){ g.strokeStyle=col.ink; g.lineWidth=Math.max(1,S*0.15); g.setLineDash([S*0.4,S*0.4]); g.beginPath(); g.moveTo(X(hp[0]),Y(hp[1])); g.lineTo(X(near[0]),Y(near[1])); g.stroke(); g.setLineDash([]);
+    const mx=(hp[0]+near[0])/2, my=(hp[1]+near[1])/2; const lbl=nd.toFixed(1)+' ft';
+    g.font=`500 ${Math.max(10,S*1.2)}px IBM Plex Mono, monospace`; const w=g.measureText(lbl).width+8;
+    g.fillStyle=col.panel; g.fillRect(X(mx)-w/2,Y(my)-S*2.6,w,S*1.6+4); g.fillStyle=col.ink; g.textAlign='center'; g.textBaseline='middle'; g.fillText(lbl,X(mx),Y(my)-S*1.8+2); }
+  // players
+  const R=1.35;
+  for(const id of ids){ const p=posAt(T[id],fr); if(!p)continue; const team=P[id].side===offTeam?'off':'def';
+    const x=X(p[0]), y=Y(p[1]);
+    if(hi.has(id)){ g.fillStyle=col[team]; g.globalAlpha=0.25; g.beginPath(); g.arc(x,y,R*2.1*S,0,Math.PI*2); g.fill(); g.globalAlpha=1; }
+    g.fillStyle=col[team]; g.beginPath(); g.arc(x,y,R*S,0,Math.PI*2); g.fill();
+    if(id===SH||id===CD){ g.strokeStyle=col.ink; g.lineWidth=Math.max(1.5,S*0.28); g.beginPath(); g.arc(x,y,(R+0.45)*S,0,Math.PI*2); g.stroke(); }
+    if(!p[3]){ g.strokeStyle=col.muted; g.lineWidth=Math.max(1,S*0.18); g.setLineDash([S*0.35,S*0.3]); g.beginPath(); g.arc(x,y,(R+0.2)*S,0,Math.PI*2); g.stroke(); g.setLineDash([]); }
+    g.fillStyle=col[team+'-ink']; g.font=`600 ${Math.max(9,S*1.35)}px IBM Plex Sans, system-ui, sans-serif`; g.textAlign='center'; g.textBaseline='middle'; g.fillText(P[id].jersey,x,y+0.5);
+    if(id===SH||id===CD||hi.has(id)){ g.fillStyle=col.ink; g.font=`600 ${Math.max(10,S*1.25)}px IBM Plex Sans, system-ui, sans-serif`; g.textBaseline='alphabetic'; g.fillText(P[id].last.replace('Feliz Sarita','Feliz'),x,y-(R+0.9)*S); }
+  }
+  // ball
+  const b=posAt(D.ball,fr);
+  if(b && !(fr>mk+8)){ const z=Math.max(0,b[2]); const r=(0.55+z*0.045)*S;
+    g.fillStyle='rgba(0,0,0,.22)'; g.beginPath(); g.ellipse(X(b[0])+z*S*0.12,Y(b[1])+z*S*0.12,0.55*S,0.4*S,0,0,Math.PI*2); g.fill();
+    g.fillStyle=col.ball; g.beginPath(); g.arc(X(b[0]),Y(b[1]),r,0,Math.PI*2); g.fill(); g.strokeStyle=col['court-line']; g.lineWidth=1; g.stroke(); }
+  // HUD
+  const c=D.clock[fi]||D.clock[N-1]; const gc=c[0]; $('#gclock').textContent=Math.floor(gc/60)+':'+String(Math.floor(gc%60)).padStart(2,'0');
+  $('#sclock').textContent=c[1]==null?'–':c[1].toFixed(1);
+  const made=fr>=mk; const sa=$('#sAway'); sa.textContent=made?D.meta.awayScore+3:D.meta.awayScore; sa.classList.toggle('score-bump',made);
+  const sv=D.sep[fi]; $('#sepNow').textContent=sv==null?'–':sv.toFixed(1)+' ft';
+  $('#tlabel').textContent=(fr/FPS).toFixed(1)+' s / '+((N-1)/FPS).toFixed(1)+' s';
+  const co=$('#callout'); if(ev){ $('#coT').textContent=ev.title; $('#coB').textContent=ev.body; co.style.opacity=1; } else co.style.opacity=0;
+  document.querySelectorAll('#pbp li').forEach((li,i)=>li.classList.toggle('now',D.events[i]===ev));
+}
+
+/* ---------- separation trace ---------- */
+const sc=$('#sep'), sx=sc.getContext('2d'); let SW=0,SHh=0;
+function drawSep(){
+  const g=sx; g.clearRect(0,0,SW,SHh);
+  const padL=42,padR=10,padT=10,padB=20, w=SW-padL-padR, h=SHh-padT-padB, ymax=18;
+  const px=i=>padL+i/(N-1)*w, py=v=>padT+h-(v/ymax)*h;
+  g.font='11px IBM Plex Mono, monospace'; g.fillStyle=col.muted; g.textAlign='right'; g.textBaseline='middle';
+  for(const v of [0,6,12,18]){ g.strokeStyle=col.rule; g.lineWidth=1; g.beginPath(); g.moveTo(padL,py(v)); g.lineTo(padL+w,py(v)); g.stroke(); g.fillText(v+' ft',padL-4,py(v)); }
+  g.textAlign='center'; g.textBaseline='top';
+  for(let s=0;s<=20;s+=5){ if(s*FPS>N-1)break; g.fillText(s+'s',px(s*FPS),padT+h+5); }
+  for(const e of D.events){ const i=e.frame-F0; if(i<0)continue; g.strokeStyle=(e.kind==='pick'||e.kind==='screen')?col.def:(e.kind==='shot'?col.accent:col.rule); g.lineWidth=e.kind==='shot'?2:1.5; g.beginPath(); g.moveTo(px(i),padT); g.lineTo(px(i),padT+h); g.stroke(); }
+  g.beginPath(); let st=false; for(let i=0;i<N;i++){const v=D.sep[i]; if(v==null){continue;} const yy=py(Math.min(v,ymax)); if(!st){g.moveTo(px(i),yy);st=true;} else g.lineTo(px(i),yy);}
+  g.lineTo(px(N-1),py(0)); g.lineTo(px(0),py(0)); g.closePath(); g.fillStyle=col['trace-fill']; g.fill();
+  g.beginPath(); st=false; for(let i=0;i<N;i++){const v=D.sep[i]; if(v==null)continue; const yy=py(Math.min(v,ymax)); if(!st){g.moveTo(px(i),yy);st=true;} else g.lineTo(px(i),yy);} g.strokeStyle=col.trace; g.lineWidth=1.75; g.stroke();
+  const ri=D.meta.shotFrame-F0, rv=D.sep[ri]; g.fillStyle=col.accent; g.beginPath(); g.arc(px(ri),py(rv),4,0,Math.PI*2); g.fill();
+  g.fillStyle=col.ink; g.textAlign='right'; g.textBaseline='bottom'; g.font='600 11px IBM Plex Sans, sans-serif'; g.fillText('Release: '+rv.toFixed(1)+' ft',px(ri)-6,py(rv)-4);
+  // playhead
+  g.strokeStyle=col.ink; g.lineWidth=1.5; g.beginPath(); g.moveTo(px(t),padT); g.lineTo(px(t),padT+h); g.stroke();
+}
+
+function drawAll(){ drawFrame(); drawSep(); }
+function resize(){ const narrow=innerWidth<640; XMAX=narrow?6:L/2+M; $('#courtbox').style.aspectRatio=(XMAX-XMIN)+'/'+(W+2*M); const r=sizeCanvas(cv,cx); S=r.width/(XMAX-XMIN); const r2=sizeCanvas(sc,sx); SW=r2.width; SHh=r2.height; drawAll(); }
+new ResizeObserver(resize).observe(cv); new ResizeObserver(resize).observe(sc);
+
+/* ---------- controls ---------- */
+const scrub=$('#scrub'); scrub.max=N-1;
+const playBtn=$('#play');
+function setPlaying(p){ playing=p; playBtn.textContent=p?'Pause':'Play'; if(p){ if(t>=N-1) t=0; last=performance.now(); requestAnimationFrame(loop);} }
+let last=0;
+function loop(now){ if(!playing)return; const dt=Math.min(0.1,(now-last)/1000); last=now; t+=dt*FPS*speed; if(t>=N-1){t=N-1;setPlaying(false);} scrub.value=Math.round(t); drawAll(); if(playing)requestAnimationFrame(loop); }
+playBtn.onclick=()=>setPlaying(!playing);
+$('#restart').onclick=()=>{t=0;scrub.value=0;drawAll();setPlaying(true);};
+scrub.oninput=()=>{t=+scrub.value; setPlaying(false); drawAll();};
+document.querySelectorAll('.speeds button').forEach(b=>b.onclick=()=>{speed=+b.dataset.s;document.querySelectorAll('.speeds button').forEach(x=>x.setAttribute('aria-pressed',x===b));});
+$('#trails').onchange=e=>{showTrails=e.target.checked;drawAll();};
+$('#links').onchange=e=>{showLinks=e.target.checked;drawAll();};
+document.addEventListener('keydown',e=>{ if(e.target.tagName==='INPUT'&&e.target.type!=='checkbox')return; if(e.code==='Space'){e.preventDefault();setPlaying(!playing);} if(e.key==='ArrowRight'){t=Math.min(N-1,t+FPS/5);scrub.value=t;drawAll();} if(e.key==='ArrowLeft'){t=Math.max(0,t-FPS/5);scrub.value=t;drawAll();} });
+
+/* ticks + pbp + roster */
+const tk=$('#ticks'); for(const e of D.events){const i=e.frame-F0; if(i<0)continue; const s=document.createElement('span'); s.className=e.kind; s.style.left=(i/(N-1)*100)+'%'; tk.appendChild(s);}
+const ol=$('#pbp');
+D.events.forEach(e=>{ const i=Math.max(0,e.frame-F0); const c=D.clock[i]; const gc=c[0];
+  const li=document.createElement('li'); const b=document.createElement('button'); b.type='button';
+  b.innerHTML=`<span class="gc">${Math.floor(gc/60)}:${(gc%60).toFixed(1).padStart(4,'0')}</span><i class="dot ${e.kind}"></i><span><span class="ev-t"></span><span class="ev-b"></span></span>`;
+  b.querySelector('.ev-t').textContent=e.title; b.querySelector('.ev-b').textContent=e.body;
+  b.onclick=()=>{ t=Math.max(0,i-12); scrub.value=t; drawAll(); setPlaying(true); };
+  li.appendChild(b); ol.appendChild(li); });
+const ro=$('#roster');
+for(const [side,label,cls] of [[offTeam,'Lenovo Tenerife','off'],[offTeam==='away'?'home':'away','Real Madrid','def']]){
+  const d=document.createElement('div'); d.innerHTML=`<h3><i class="chip ${cls}"></i>${label}</h3><ul></ul>`;
+  ids.filter(i=>P[i].side===side&&T[i][D.meta.shotFrame-F0]).sort((a,b)=>+P[a].jersey-+P[b].jersey).forEach(i=>{const li=document.createElement('li'); li.innerHTML=`<span class="j">${P[i].jersey}</span><span></span>`; li.lastChild.textContent=P[i].first+' '+P[i].last; d.querySelector('ul').appendChild(li);});
+  ro.appendChild(d); }
+
+resize();
+if(!reduce) setTimeout(()=>setPlaying(true),700);
+})();
+</script>

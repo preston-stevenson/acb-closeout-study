@@ -1,0 +1,10 @@
+opendata-basketball/
+tracking/
+cache/
+__pycache__/
+*.pyc
+.venv/
+.DS_Store
+results/
+pages/out/
+*.csv
