@@ -1,37 +1,39 @@
-# Closeouts, beats and help defense: an ACB tracking study
+# Closeouts, beats and help defense, ACB tracking study
 
 How should a defender close out, and what actually happens when he gets beaten? This project answers both from broadcast tracking of 10 Liga ACB 2025-26 games (SkillCorner open data). It builds its own definitions of "beaten" and "help" from player positions and tests them against outcomes.
 
 ## Key findings
 
-**1. Getting there matters more than anything else, for every type of shooter.** A closeout within 6 ft half a second after the catch:
+**1- Getting within 6 feet matters more than anything else, for every type of shooter.** A closeout within 6 ft half a second after the catch:
 - cuts three-point attempts by about 40 percentage points
 - cuts the catcher's own scoring by about 0.3 points
 - cuts points per chance by about 0.2
 
 This holds whether the catcher is a pure shooter, a driver or both. 
 I stole some archetypes that PC used when I was a manager, and then grouped players based on drive and shooting tendencies from the 293 games into one of four buckets.
+The idea was Rondo -> Korver the distance you close out to before chopping your feet to defend changes depending on the shooter's ability.
+Doing 4 names was an easy way to remember numbers and names to quickly decide how to defend player X. 
 The tight closeout also triples how often the defender gets beaten, and scoring still goes down.
 
 | Catcher type | Takes a three, tight vs loose | Beaten, tight vs loose | Points per chance, tight vs loose |
 |---|---|---|---|
 | Korver (shooter) | 19% vs 78% | 19% vs 2% | 0.92 vs 0.66 |
-| Lillard (shooter and driver) | 27% vs 74% | 36% vs 12% | 0.73 vs 1.32 |
-| Westbrook (driver, will shoot) | 9% vs 50% | 30% vs 10% | 0.48 vs 1.00 |
+| Lillard (shoot first, drive second) | 27% vs 74% | 36% vs 12% | 0.73 vs 1.32 |
+| Westbrook (drive first, shoot second) | 9% vs 50% | 30% vs 10% | 0.48 vs 1.00 |
 | Rondo (driver, non-shooter) | 18% vs 58% | 36% vs 8% | 0.68 vs 1.11 |
 
-**2. ACB defenders close out speed does not drastically vary by type.** End distance and speed are the same whether the catcher is a Korver or a Rondo. This is partly because we have a limited dataset, and also, compared to 6 years ago, there are very few guys that can't make an open 3. 
+**2- ACB defenders close out speed does not drastically vary by type.** End distance and speed are the same whether the catcher is a Korver or a Rondo. This is partly because we have a limited dataset, and also, compared to when I was a manager 6 years ago, there are very few guys that can't make an open 3. 
 
-**3. Momentum is what gets defenders beaten.** On drives without a screen, a defender still closing at 5+ ft/s half a second after the catch is beaten 55% of the time, vs 29% for one who has chopped their feet and slowed down. 
+**3- Momentum is what gets defenders beaten.** On drives without a screen, a defender still closing at 5+ ft/s half a second after the catch is beaten 55% of the time, vs 29% for one who has chopped their feet and stayed under control. 
 
-**4. Most blow-bys are covered by help. Shoutout to no def 3 seconds.**
+**4- Most blow-bys are covered by help (Shoutout to no def 3 seconds).**
 - A second defender is already between the driver and the rim in 78% of blow-bys.
 - Two-thirds of blow-bys happen 20+ ft from the rim, where they score no more than an ordinary touch.
 - A beat inside 20 ft with no low man obviously works out well, about 1.3 points per chance.
 
-**5. The attack starts about half a second before a defender is visibly beaten.**
+**5- The attack starts about half a second before a defender is visibly beaten.**
 
-**6. Spacing.** Simple spread predicts scoring: the area of the shape the five attackers make, and players beyond the arc, each add about +0.1 points per chance per standard deviation. Zone entropy and floor-control measures don't.
+**6- Spacing.** Simple spread predicts scoring: the area of the shape the five attackers make, and players beyond the arc, each add about +0.1 points per chance per standard deviation. Zone entropy and floor-control measures don't.
 
 ## Validation
 
@@ -42,7 +44,6 @@ I blind labeled 50 tracking examples, including whether there was a guy was beat
 - **There was a significant difference in average distance to defender on late closeouts** (8.8 ft vs about 5.8 ft half a second after the catch).
 - **"Flew out" vs "under control" is still harder to see in recreated clips from the tracking data.** Defenders labeled as flying out were barely slowing on arrival (−1.5 vs −4.9 ft/s²), which points to deceleration as the measure, but it is hard to say whether they got blown by because of a bad closeout, or they are just not a good defender.
 
-The labeling tool isn't part of this repo; the results are summarized here.
 
 ## How it works
 
